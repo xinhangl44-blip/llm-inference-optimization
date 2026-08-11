@@ -1,4 +1,3 @@
-# Qwen2.5-7B-Instruct: FP8 vs AWQ 4-bit Performance Comparison & Evaluation Report
 
 ## 1. Experimental Environment & Configurations
 
