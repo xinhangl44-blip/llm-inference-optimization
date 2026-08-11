@@ -1,4 +1,3 @@
-# Benchmarking Report: Continuous Batching vs. Chunked Prefill in vLLM
 
 ## 1. Introduction & Hypothesis
 
