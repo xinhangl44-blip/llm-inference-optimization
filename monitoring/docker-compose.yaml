@@ -52,7 +52,7 @@ services:
     container_name: dcgm-exporter
     restart: unless-stopped
     environment:
-      - DCGM_EXPORTER_INTERVAL=10000 # 10秒采集一次
+      - DCGM_EXPORTER_INTERVAL=10000 
     deploy:
       resources:
         reservations:
