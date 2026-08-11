@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: default
+  labels:
+    app: redis
+spec:
+  serviceName: "redis-headless"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.2-alpine
+        command:
+          - "redis-server"
+          - "--appendonly"
+          - "yes"
+          - "--appendfsync"
+          - "always"
+          - "--no-appendfsync-on-rewrite"
+          - "no"
+          - "--requirepass"
+          - "$(REDIS_PASSWORD)"
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-password-secret
+              key: redis-password
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - redis-cli -a $(REDIS_PASSWORD) ping | grep PONG
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - redis-cli -a $(REDIS_PASSWORD) ping | grep PONG
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          failureThreshold: 3
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-headless
+  namespace: default
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    name: redis
+  selector:
+    app: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: default
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  selector:
+    app: redis

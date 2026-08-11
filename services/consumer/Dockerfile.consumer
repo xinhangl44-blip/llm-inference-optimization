@@ -1,0 +1,13 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# 安装依赖
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制代码
+COPY consumer-main.py .
+
+# 启动消费者常驻进程
+CMD ["python3", "consumer-main.py"]

@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - "prometheus_data:/prometheus"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - "grafana_data:/var/lib/grafana"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - monitoring
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($|/)'
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring
+
+  dcgm-exporter:
+    image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.0-ubuntu22.04
+    container_name: dcgm-exporter
+    restart: unless-stopped
+    environment:
+      - DCGM_EXPORTER_INTERVAL=10000 # 10秒采集一次
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ports:
+      - "9400:9400"
+    networks:
+      - monitoring
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:

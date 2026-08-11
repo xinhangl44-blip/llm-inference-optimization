@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-consumer
+  namespace: default
+  labels:
+    app: vllm-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-consumer
+  template:
+    metadata:
+      labels:
+        app: vllm-consumer
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: worker
+        image: vllm-consumer:v1
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: redis-url
+        - name: VLLM_ENDPOINT
+          value: "http://vllm-service:80"
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+        readinessProbe:
+          exec:
+            command:
+            - python3
+            - -c
+            - "import redis, os; r = redis.from_url(os.environ['REDIS_URL']); r.ping()"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          exec:
+            command:
+            - python3
+            - -c
+            - "import redis, os; r = redis.from_url(os.environ['REDIS_URL']); r.ping()"
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          failureThreshold: 3
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sh", "-c", "sleep 10"]

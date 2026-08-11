@@ -1,0 +1,11 @@
+Mode,Group,Version,Filter,n-shot,Metric,Value,Stderr
+FP,mmlu,2,none,,acc,0.7354,0.0079
+FP,humanities,2,none,0,acc,0.7431,0.0165
+FP,other,2,none,0,acc,0.7431,0.0162
+FP,social sciences,2,none,0,acc,0.7967,0.0161
+FP,stem,2,none,0,acc,0.6863,0.0145
+AWQ,mmlu,2,none,,acc,0.727,0.008
+AWQ,humanities,2,none,0,acc,0.7369,0.0165
+AWQ,other,2,none,0,acc,0.7323,0.0163
+AWQ,social sciences,2,none,0,acc,0.795,0.0161
+AWQ,stem,2,none,0,acc,0.6737,0.0147
